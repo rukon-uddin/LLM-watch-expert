@@ -67,4 +67,4 @@ Follow the steps to run the system
 
 ## Contact
 
-For any inquiries or support, feel free to reach out via email: your.email@example.com.
+For any inquiries or support, feel free to reach out via email: rukonuddin122@gmail.com.
