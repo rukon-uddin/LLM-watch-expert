@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+    
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+    
+        li {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 20px;
+            align-items: start;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+    
+        li img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+    
+        .watch-info {
+            max-width: 600px;
+        }
+    
+        .watch-info h2 {
+            margin: 0;
+            font-size: 1.2em;
+            overflow-wrap: break-word;
+        }
+    
+        .watch-info p {
+            margin: 5px 0;
+        }
+    
+        .view-details {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+    
+        .view-details:hover {
+            background-color: #0056b3;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .search-filter {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #007bff;
+            background-color: white;
+            color: #007bff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Watch Expert (Powered by LLM)</h1>
+    <div class="controls">
+        <div class="search-filter">
+            <div class="control-group">
+                <label for="search">Search</label>
+                <input type="text" id="search" placeholder="Search by brand or model">
+            </div>
+            <div class="control-group">
+                <label for="min-price">Min Price</label>
+                <input type="number" id="min-price" min="0">
+            </div>
+            <div class="control-group">
+                <label for="max-price">Max Price</label>
+                <input type="number" id="max-price" min="0">
+            </div>
+            <div class="control-group">
+                <label for="min-rating">Min Rating</label>
+                <select id="min-rating">
+                    <option value="">Any</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                    <option value="2">2+ Stars</option>
+                    <option value="1">1+ Star</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="sort">Sort By</label>
+                <select id="sort">
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="rating_desc">Highest Rated</option>
+                    <option value="rating_asc">Lowest Rated</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <ul id="watch-list">
+        <!-- Watches will be populated here via JavaScript -->
+    </ul>
+
+    <!-- <script>
+        function fetchWatches() {
+            const searchParams = new URLSearchParams();
+    
+            // Get values from the form inputs
+            const searchQuery = document.getElementById('search').value.trim();
+            const minPrice = document.getElementById('min-price').value;
+            const maxPrice = document.getElementById('max-price').value;
+            const minRating = document.getElementById('min-rating').value;
+            const sort = document.getElementById('sort').value;
+    
+            // Append query parameters if they exist
+            if (searchQuery) {
+                searchParams.append('query', searchQuery);
+            }
+            if (minPrice) {
+                searchParams.append('min_price', minPrice);
+            }
+            if (maxPrice) {
+                searchParams.append('max_price', maxPrice);
+            }
+            if (minRating) {
+                searchParams.append('min_rating', minRating);
+            }
+            if (sort) {
+                searchParams.append('sort', sort);
+            }
+    
+            fetch(`/api/watches?${searchParams.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    const watchList = document.getElementById('watch-list');
+                    watchList.innerHTML = ''; // Clear the current list
+    
+                    if (data.length === 0) {
+                        const noResult = document.createElement('li');
+                        noResult.textContent = 'No watches found';
+                        watchList.appendChild(noResult);
+                    } else {
+                        data.forEach(watch => {
+                            const listItem = document.createElement('li');
+    
+                            const img = document.createElement('img');
+                            img.src = watch.image_url;
+                            img.alt = 'Watch Image';
+                            listItem.appendChild(img);
+    
+                            const watchInfo = document.createElement('div');
+                            watchInfo.classList.add('watch-info');
+    
+                            const title = document.createElement('h2');
+                            title.textContent = watch.title;
+                            watchInfo.appendChild(title);
+    
+                            const price = document.createElement('p');
+                            price.textContent = `Price: $${watch.price}`;
+                            watchInfo.appendChild(price);
+
+                            const rating = document.createElement('p');
+                            rating.textContent = `Average Rating: ${watch.rating}`;
+                            watchInfo.appendChild(rating);
+    
+                            listItem.appendChild(watchInfo);
+    
+                            const viewDetails = document.createElement('a');
+                            viewDetails.href = `/watch/${watch.id}`;
+                            viewDetails.textContent = 'View Details';
+                            viewDetails.classList.add('view-details');
+                            listItem.appendChild(viewDetails);
+    
+                            watchList.appendChild(listItem);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching watches:', error);
+                });
+        }
+    
+        // Event listeners for form fields to trigger the search
+        document.getElementById('search').addEventListener('input', fetchWatches);
+        document.getElementById('min-price').addEventListener('input', fetchWatches);
+        document.getElementById('max-price').addEventListener('input', fetchWatches);
+        document.getElementById('min-rating').addEventListener('change', fetchWatches);
+        document.getElementById('sort').addEventListener('change', fetchWatches);
+    
+        // Initial fetch when the page loads
+        fetchWatches();
+    </script> -->
+    <script>
+        let intervalId;
+    
+        function fetchWatches() {
+            const searchParams = new URLSearchParams();
+    
+            // Get values from the form inputs
+            const searchQuery = document.getElementById('search').value.trim();
+            const minPrice = document.getElementById('min-price').value;
+            const maxPrice = document.getElementById('max-price').value;
+            const minRating = document.getElementById('min-rating').value;
+            const sort = document.getElementById('sort').value;
+    
+            // Append query parameters if they exist
+            if (searchQuery) {
+                searchParams.append('query', searchQuery);
+            }
+            if (minPrice) {
+                searchParams.append('min_price', minPrice);
+            }
+            if (maxPrice) {
+                searchParams.append('max_price', maxPrice);
+            }
+            if (minRating) {
+                searchParams.append('min_rating', minRating);
+            }
+            if (sort) {
+                searchParams.append('sort', sort);
+            }
+    
+            fetch(`/api/watches?${searchParams.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    const watchList = document.getElementById('watch-list');
+                    watchList.innerHTML = ''; // Clear the current list
+    
+                    if (data.length === 0) {
+                        const noResult = document.createElement('li');
+                        noResult.textContent = 'No watches found';
+                        watchList.appendChild(noResult);
+                    } else {
+                        data.forEach(watch => {
+                            const listItem = document.createElement('li');
+    
+                            const img = document.createElement('img');
+                            img.src = watch.image_url;
+                            img.alt = 'Watch Image';
+                            listItem.appendChild(img);
+    
+                            const watchInfo = document.createElement('div');
+                            watchInfo.classList.add('watch-info');
+    
+                            const title = document.createElement('h2');
+                            title.textContent = watch.title;
+                            watchInfo.appendChild(title);
+    
+                            const price = document.createElement('p');
+                            price.textContent = `Price: $${watch.price}`;
+                            watchInfo.appendChild(price);
+    
+                            const rating = document.createElement('p');
+                            rating.textContent = `Average Rating: ${watch.rating}`;
+                            watchInfo.appendChild(rating);
+    
+                            listItem.appendChild(watchInfo);
+    
+                            const viewDetails = document.createElement('a');
+                            viewDetails.href = `/watch/${watch.id}`;
+                            viewDetails.textContent = 'View Details';
+                            viewDetails.classList.add('view-details');
+                            listItem.appendChild(viewDetails);
+    
+                            watchList.appendChild(listItem);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching watches:', error);
+                });
+        }
+    
+        function startRealTimeUpdates() {
+            // Fetch watches immediately when the page loads
+            fetchWatches();
+    
+            // Set up a periodic fetch every 5 seconds
+            intervalId = setInterval(fetchWatches, 5000);
+        }
+    
+        function stopRealTimeUpdates() {
+            // Stop the periodic updates
+            clearInterval(intervalId);
+        }
+    
+        // Event listeners for form fields to trigger the search
+        document.getElementById('search').addEventListener('input', fetchWatches);
+        document.getElementById('min-price').addEventListener('input', fetchWatches);
+        document.getElementById('max-price').addEventListener('input', fetchWatches);
+        document.getElementById('min-rating').addEventListener('change', fetchWatches);
+        document.getElementById('sort').addEventListener('change', fetchWatches);
+    
+        // Start real-time updates when the page loads
+        startRealTimeUpdates();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ watch['title'] }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            padding: 20px;
+        }
+
+        .watch-details {
+            flex: 1;
+            width: 50%;
+            /* Set width to 50% */
+            margin-right: 20px;
+            /* Space between watch details and chat */
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .chat-container {
+            flex: 1;
+            width: 50%;
+            /* Set width to 50% */
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .chat-log {
+            max-height: 300px;
+            /* Increased height */
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .chat-log p {
+            margin: 5px 0;
+        }
+
+        .user-message {
+            color: blue;
+        }
+
+        .bot-response {
+            color: green;
+        }
+
+        .chat-input {
+            display: flex;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .chat-input button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #0056b3;
+        }
+
+        .review-container {
+            max-width: 800px;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .reviews-section h2 {
+            margin: 30px 0 20px;
+            font-size: 1.5em;
+            color: #2c3e50;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .reviewer-info {
+            flex-grow: 1;
+        }
+
+        .reviewer-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .review-date {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .rating {
+            color: #f39c12;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .review-text {
+            line-height: 1.6;
+            color: #2c3e50;
+            white-space: pre-line;
+        }
+
+        .update-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="watch-details">
+        <h1>{{ watch['title'] }}</h1>
+        <img src="{{ watch['image_url'] }}" height="400vh" alt="Watch Image">
+        <p><strong>Price:</strong> {{ watch['price'] }}</p>
+        <p><strong>Description:</strong> {{ watch['description'] }}</p>
+        <a href="{{ watch['product_url'] }}">Buy Now</a>
+        <div class="reviews-section">
+            <h2>Customer Reviews</h2>
+            {% for review in reviews %}
+            <div class="review-container">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <p class="reviewer-name">{{ review.reviewer_name }}</p>
+                        <p class="review-date">{{ review.review_date }}</p>
+                    </div>
+                    <div class="rating">{{ review.rating }}</div>
+                </div>
+                <div class="review-text">
+                    {{ review.review_text | replace("UPDATE", "<strong>UPDATE</strong>") | safe }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <h3 style="text-align: center;">Chat With Wrist Watch Expert (Powered by LLM)</h3>
+        <div class="chat-log" id="chat-log"></div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message..." />
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const watchDescription = `{{ watch['description'] | safe }}`;
+        document.getElementById('send-button').addEventListener('click', function () {
+            const userInput = document.getElementById('user-input').value;
+            if (!userInput) return;
+
+            // Get watch details
+            const watchTitle = "{{ watch['title'] }}";
+            const watchPrice = "{{ watch['price'] }}";
+
+            // Add user message to chat log
+            const chatLog = document.getElementById('chat-log');
+            const userMessage = document.createElement('p');
+            userMessage.classList.add('user-message');
+            userMessage.textContent = "You: " + userInput;
+            chatLog.appendChild(userMessage);
+
+            // Clear the input field
+            document.getElementById('user-input').value = '';
+
+            // Send the message to the server along with watch details
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: userInput,
+                    title: watchTitle,
+                    price: watchPrice,
+                    description: watchDescription
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Add bot response to chat log
+                    const botResponse = document.createElement('p');
+                    botResponse.classList.add('bot-response');
+                    botResponse.textContent = "Bot: " + data.response;
+                    chatLog.appendChild(botResponse);
+
+                    // Scroll to the bottom of chat log
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+
+</html>

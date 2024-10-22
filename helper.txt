@@ -1,0 +1,27 @@
+conda create --name myenv python==3.11 pytorch-cuda==12.1 pytorch cudatoolkit xformers -c pytorch -c nvidia -c xformers -y
+conda activate myenv
+
+pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+
+Postgres Tables
+############# TABLE 1 ################
+CREATE TABLE watches (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(1000),
+    price FLOAT,
+    rating FLOAT,
+    description TEXT,
+    product_url TEXT,
+    image_url TEXT
+);
+
+############# TABLE 2 ################
+CREATE TABLE review (
+    id SERIAL PRIMARY KEY,
+    watch_id INT REFERENCES watches(id) ON DELETE CASCADE,
+    reviewer_name VARCHAR(255),
+    review_date TEXT,
+    rating VARCHAR(255),
+    review_text TEXT
+);
+
